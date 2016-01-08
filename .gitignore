@@ -1,0 +1,3 @@
+*.jar
+distribute/*
+tmp-output/*

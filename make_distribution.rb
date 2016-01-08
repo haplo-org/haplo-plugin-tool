@@ -12,9 +12,10 @@ BUILD_DIR = 'tmp-output'
 TO_COPY = ['README.md','LICENSE','bin','lib']
 
 require 'fileutils'
-require "#{File.dirname(__FILE__)}/../../khq/lib/common/source_control/source_control"
 
 puts "Making plugin tool distribution..."
+
+FileUtils.mkdir OUTPUT_DIR unless File.exist? OUTPUT_DIR
 
 if File.exist? BUILD_DIR
   puts "Removing old build directory..."
@@ -25,8 +26,7 @@ FileUtils.mkdir BUILD_DIR
 FileUtils.mkdir "#{BUILD_DIR}/haplo-plugin"
 
 # Source control version
-source_control = SourceControl.current_revision
-revision = source_control.displayable_id
+revision = `git rev-parse --verify --short HEAD`.strip
 
 # Copy in files
 TO_COPY.each do |file|
