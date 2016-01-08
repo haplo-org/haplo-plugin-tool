@@ -1,0 +1,81 @@
+
+Usage:
+
+  haplo-plugin [OPTION] [COMMAND]
+
+Options:
+
+  --help, -h
+    Display this message
+
+  --plugin, -p
+    Specify one or more plugin names, separated by commas, or ALL to specify all plugins
+    in the current directory. If not specified, and there's a single plugin in the current
+    directory, it will be selected automatically.
+
+  --server, -s [SUBSTRING]
+    For this run of the plugin tool, use the server containing the given substring.
+
+  --minimise
+    When uploading templates and client side JavaScript to the server, minimise the files
+    to match the pre-deployment pre-processing. Use this for final testing before
+    submitting the plugin for review.
+
+  --no-console, -n
+    In development mode, don't connect to the server for notifications. This prevents the
+    output of console.log() being displayed in your local terminal window.
+
+Commands:
+
+  develop (default command)
+    Developer mode. Push plugin to the specified server.
+
+  auth [SERVER]
+    Authorise with server. SERVER can optionally include a non-default port number.
+
+  server [SUBSTRING]
+    Change the default server to the one containing the given substring.
+
+  test [NAME]
+    Run the tests on the server, then report on the results.
+    This command does *not* upload changes to the plugin or tests to the server.
+    If the optional NAME argument is supplied, then only tests which have filenames
+    which include this string will be run.
+
+  new
+    Create a new plugin, with all the required directories and an example plugin.json file.
+
+  reset-db
+    Remove all the relational database tables on the server, then recreate them with the
+    current tables defined in the plugin.
+
+  uninstall
+    Uninstall the plugin from the server.
+
+  check
+    Perform checks on the plugin as a quick test before it's submitted for review.
+
+  license-key <application-id>
+    Generate a license key to allow plugin installation by a client. The numeric
+    application ID is displayed during plugin installation.
+
+
+Running haplo-plugin without any arguments will find the plugin in the current directory and
+run the 'develop' command.
+
+To initialise a new plugin, run a command like
+
+  haplo-plugin -p example_plugin new
+
+and then edit the generated files.
+
+
+If the server certificate does not use a known public CA, a alternative certificate can be
+provided using a server.crt file in the current working directory. This may optionally contain
+elements of the hostname, eg app.example.com would select the first file from:
+   server.app.example.com.crt server.example.com.crt server.com.crt server.crt
+
+
+For more information, see http://docs.haplo.org/dev/tool/plugin
+
+
