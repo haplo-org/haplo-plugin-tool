@@ -88,12 +88,13 @@ module PluginTool
 
   def self.syntax_check_haplo_template(plugin, file)
     begin
-      Java::OrgHaploTemplateHtml::Parser.new(File.read("#{plugin.plugin_dir}/#{file}"), file).parse()
+      Java::OrgHaploTemplateHtml::Parser.new(File.read("#{plugin.plugin_dir}/#{file}"), file, PARSER_CONFIG).parse()
       nil
     rescue => e
       "  #{e.message}"
     end
   end
+  PARSER_CONFIG = TemplateParserConfiguration.new
 
   def self.do_syntax_checking
     init_syntax_checking
