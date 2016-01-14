@@ -12,7 +12,8 @@ module PluginTool
     @@check_report = ''
     @@check_ok = true
     @@check_warn = false
-    plugins.each { |p| check_plugin(p) }
+    max_plugin_name_length = plugins.map { |p| p.name.length } .max
+    plugins.each { |p| check_plugin(p, max_plugin_name_length) }
     if @@check_warn || !(@@check_ok)
       puts "\nFILES WITH ERRORS"
       puts @@check_report
@@ -29,9 +30,9 @@ module PluginTool
     end
   end
 
-  def self.check_plugin(plugin)
+  def self.check_plugin(plugin, max_plugin_name_length)
     plugin_dir = plugin.plugin_dir
-    STDOUT.write(plugin.name+" ")
+    STDOUT.write(sprintf("%#{max_plugin_name_length.to_i}s ", plugin.name))
     Dir.glob("#{plugin_dir}/**/*").each do |pathname|
       next unless File.file?(pathname)
       next if plugin.exclude_files_from_syntax_check.include?(pathname)
