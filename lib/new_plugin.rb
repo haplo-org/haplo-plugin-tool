@@ -52,9 +52,11 @@ P.respond("GET", "/do/#{plugin_url_fragment}/example", [
 
 __E
     end
-    File.open("#{plugin_name}/template/example.html",'w') do |file|
+    File.open("#{plugin_name}/template/example.hsvt",'w') do |file|
       file.write(<<__E)
-<p>This is an example template.</p>
+// HSVT documentation: http://docs.haplo.org/dev/plugin/templates
+
+<p class="example"> "This is an example template." </p>
 __E
     end
     File.open("#{plugin_name}/test/#{plugin_name}_test1.js",'w') do |file|
