@@ -15,8 +15,8 @@ module PluginTool
     Dir.glob("#{directory}/**/*").sort.each do |pathname|
       # Ignore directories
       next unless File.file? pathname
-      # Ignore Emacs backup files
-      next if pathname =~ /\~\z/
+      # Ignore temporary files
+      next if pathname =~ /\~/
       # Check file
       filename = pathname.slice(directory.length + 1, pathname.length)
       raise "Bad filename for #{filename}" unless filename =~ /\A([a-zA-Z0-9_\/\-]+\/)?([a-z0-9_-]+\.[a-z0-9]+)\z/
