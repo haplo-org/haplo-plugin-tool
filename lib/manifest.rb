@@ -19,7 +19,7 @@ module PluginTool
       next if pathname =~ /\~/
       # Check file
       filename = pathname.slice(directory.length + 1, pathname.length)
-      raise "Bad filename for #{filename}" unless filename =~ /\A([a-zA-Z0-9_\/\-]+\/)?([a-z0-9_-]+\.[a-z0-9]+)\z/
+      raise "Bad filename for #{filename}" unless filename =~ /\A([a-zA-Z0-9_\/\-]+\/)?([a-zA-Z0-9_-]+\.[a-z0-9]+)\z/
       dir = $1
       name = $2
       if dir != nil
