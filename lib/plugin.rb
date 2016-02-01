@@ -72,18 +72,25 @@ module PluginTool
 
     # ---------------------------------------------------------------------------------------------------------
 
+    def developer_json
+      @developer_json ||= begin
+        developer_json_pathname = "#{@plugin_dir}/developer.json"
+        if File.exist? developer_json_pathname
+          JSON.parse(File.read(developer_json_pathname))
+        else
+          {}
+        end
+      end
+    end
+
     def exclude_files_from_syntax_check
       @exclude_files_from_syntax_check ||= begin
         # developer.json file might contain some files which should not be syntax checked
-        exclude_files_from_check = []
-        developer_json_pathname = "#{@plugin_dir}/developer.json"
-        if File.exist? developer_json_pathname
-          developer_json = JSON.parse(File.read(developer_json_pathname))
-          if developer_json['excludeFromSyntaxCheck'].kind_of?(Array)
-            exclude_files_from_check = developer_json['excludeFromSyntaxCheck']
-          end
+        if developer_json['excludeFromSyntaxCheck'].kind_of?(Array)
+          developer_json['excludeFromSyntaxCheck']
+        else
+          []
         end
-        exclude_files_from_check
       end
     end
 

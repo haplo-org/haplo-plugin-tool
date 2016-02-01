@@ -77,6 +77,13 @@ module PluginTool
         # global.js requires server side syntax checking, but doesn't have any extra globals, not even the plugin name.
         kind = 'js' if kind == 'global.js'
       end
+      # Add extra symbols from developer.json?
+      extra_globals.concat(
+        case kind
+          when 'js', 'test'; plugin.developer_json['syntaxCheckGlobalsServer']
+          when 'static'; plugin.developer_json['syntaxCheckGlobalsBrowser']
+          else; []
+        end || [])
       # Do syntax checking
       lint_report = @@syntax_tester.call(@@cx, @@javascript_scope, @@javascript_scope, [js, kind, JSON.generate(extra_globals)])
       schema_report = schema_requirements ? schema_requirements.report_usage(js) : nil
