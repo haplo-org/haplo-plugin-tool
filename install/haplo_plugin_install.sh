@@ -47,7 +47,7 @@ tar -zxf $jruby_filename
 # assumes that jruby maintains "jruby-version" naming scheme for release tarballs
 mv jruby-$jruby_version jruby
 
-export PATH=$PATH:$HAPLO_PLUGIN_INSTALL_DIR/jruby/bin
+export PATH=$HAPLO_PLUGIN_INSTALL_DIR/jruby/bin:$PATH
 echo "Installing Haplo plugin tool gem ..."
 jgem install haplo
 
