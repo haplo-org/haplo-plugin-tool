@@ -17,9 +17,13 @@ jruby_checksum="9369cfd8b19841eae2a764988121fc7d43b313b3"
 if [ -d jruby ]; then rm -r jruby; fi
 if [ -d jruby-$jruby_version ]; then rm -r jruby-$jruby_version; fi
 
+last_field() {
+  awk -F' ' '{ print $NF }'
+}
+
 jruby_checksum_matches() {
-  downloaded_checksum=`openssl sha1 < $jruby_filename`
-  [ $jruby_checksum = $downloaded_checksum ]
+  downloaded_checksum="`openssl sha1 < $jruby_filename | last_field`"
+  [ "$jruby_checksum" = "$downloaded_checksum" ]
 }
 
 download_jruby() {
@@ -39,7 +43,7 @@ fi
 
 echo "Verifying SHA1 checksum ..."
 if ! jruby_checksum_matches; then
-  echo "ERROR: SHA1 checksum mismatch, couldn't verify JRuby download"; exit
+  echo "ERROR: SHA1 checksum mismatch, couldn't verify JRuby download"; exit 1
 fi
 
 echo "Unpacking JRuby ..."
