@@ -128,7 +128,7 @@ plugins.sort! do |a,b|
   pri_b = b.plugin_load_priority
   (pri_a == pri_b) ? (a.name <=> b.name) : (pri_a <=> pri_b)
 end
-plugins.each { |p| p.print_banner }
+puts "#{plugins.length} plugin#{plugins.length != 1 ? 's' : ''}"
 
 # Custom behaviour for this repo?
 PluginTool.custom_behaviour.start(plugins, PLUGIN_TOOL_COMMAND, options, LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND])

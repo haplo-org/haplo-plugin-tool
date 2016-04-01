@@ -40,10 +40,6 @@ module PluginTool
       pj['loadPriority'] || DEFAULT_PLUGIN_LOAD_PRIORITY
     end
 
-    def print_banner
-      puts "Plugin: #{@plugin_dir}"
-    end
-
     def setup_for_server
       # Make the first empty manifest (may be replaced from server)
       @current_manifest = {}
