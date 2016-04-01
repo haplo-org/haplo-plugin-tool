@@ -7,8 +7,11 @@
 
 module PluginTool
 
-  # NOTE: Also update packing.rb if this changes
-  ALLOWED_PLUGIN_DIRS = ['js', 'static', 'template', 'test', 'data']
+  PLUGIN_ACCEPTABLE_FILENAME = /\A(js|static|template|test|data)\/([A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.[A-Za-z0-9]+\z/
+  PLUGIN_ACCEPTABLE_FILENAME_EXCEPTIONS = ['plugin.json', 'requirements.schema', 'global.js', 'certificates-temp-http-api.pem', 'developer.json', 'readme.txt']
+  def self.plugin_filename_allowed?(filename)
+    (filename =~ PLUGIN_ACCEPTABLE_FILENAME) || (PLUGIN_ACCEPTABLE_FILENAME_EXCEPTIONS.include?(filename))
+  end
 
   def self.generate_manifest(directory)
     manifest = Hash.new
@@ -19,13 +22,9 @@ module PluginTool
       next if pathname =~ /\~/
       # Check file
       filename = pathname.slice(directory.length + 1, pathname.length)
-      raise "Bad filename for #{filename}" unless filename =~ /\A([a-zA-Z0-9_\/\-]+\/)?([a-zA-Z0-9_-]+\.[a-z0-9]+)\z/
-      dir = $1
-      name = $2
-      if dir != nil
-        dir = dir.gsub(/\/\z/,'')
-        raise "Bad directory #{dir}" unless dir =~ /\A([a-zA-Z0-9_\-]+)[a-zA-Z0-9_\/\-]*\z/
-        raise "Bad root directory #{$1}" unless ALLOWED_PLUGIN_DIRS.include?($1)
+      unless plugin_filename_allowed?(filename)
+        puts "WARNING: Ignoring #{filename}"
+        next
       end
       # Get hash of file
       digest = File.open(pathname) { |f| Digest::SHA256.hexdigest(f.read) }

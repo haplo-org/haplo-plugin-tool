@@ -166,11 +166,13 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
 end
 
 # Run the command
-plugins.each { |p| p.command(PLUGIN_TOOL_COMMAND) }
+errors = []
+plugins.each { |p| p.command(PLUGIN_TOOL_COMMAND, errors) }
 
-# It this isn't the long-running develop command, stop now
+# It this isn't the long-running develop command, output errors and stop now
 if PLUGIN_TOOL_COMMAND != 'develop'
-  exit 0
+  errors.each { |error| puts error }
+  exit(errors.empty? ? 0 : 1)
 end
 
 # Syntax checking in the background

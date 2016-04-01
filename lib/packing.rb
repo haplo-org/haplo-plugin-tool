@@ -7,11 +7,10 @@
 
 module PluginTool
 
-  PACKING_ACCEPTABLE_FILENAME = /\A(js|static|template|test|data)\/([a-z0-9_-]+\/)*[a-z0-9_-]+\.[a-z0-9]+\z/
-  PACKING_ACCEPTABLE_EXCEPTIONS = ['plugin.json', 'requirements.schema', 'global.js', 'certificates-temp-http-api.pem']
-  PACKING_EXCLUDE = ['developer.json']
+  PACKING_EXCLUDE = ['developer.json', 'readme.txt']
 
-  def self.pack_plugin(plugin_name, output_directory)
+  def self.pack_plugin(plugin_name, output_directory, errors = [])
+    STDOUT.write("#{plugin_name}: ")
     # Get filenames and sort
     files = Dir.glob("#{plugin_name}/**/*").map do |filename|
       if File.file? filename
@@ -19,29 +18,26 @@ module PluginTool
       else
         nil
       end
-    end .select { |f| !PACKING_EXCLUDE.include?(f) }.compact.sort
-    # Check each filename is acceptable
-    files.each do |filename|
-      unless filename =~ PACKING_ACCEPTABLE_FILENAME || PACKING_ACCEPTABLE_EXCEPTIONS.include?(filename)
-        puts "File '#{filename}' has an unacceptable filename"
-        exit 1
+    end .compact.select do |filename|
+      ok = plugin_filename_allowed?(filename) && !PACKING_EXCLUDE.include?(filename)
+      unless ok || PACKING_EXCLUDE.include?(filename)
+        STDOUT.write("!")
+        errors.push("IGNORED: #{plugin_name}/#{filename}")
       end
-    end
+      ok
+    end .sort
     # Clean output directory
     output_plugin_dir = "#{output_directory}/#{plugin_name}"
-    puts "Output directory: #{output_plugin_dir}"
     if File.exist? output_plugin_dir
-      puts "Removing old output directory #{output_plugin_dir}"
       FileUtils.rm_r(output_plugin_dir)
     end
     # Make file structure
     FileUtils.mkdir(output_plugin_dir)
     # Process each file, building a manifest
-    puts "Processing files:"
     manifest = ''
     minimiser = PluginTool::Minimiser.new
     files.each do |filename|
-      puts "  #{filename}"
+      STDOUT.write("."); STDOUT.flush
       data = File.open("#{plugin_name}/#{filename}") { |f| f.read }
       # Minimise file?
       unless filename =~ /\Ajs\//
@@ -56,13 +52,12 @@ module PluginTool
       # Filename entry in Manifest
       manifest << "F #{hash} #{filename}\n"
     end
+    STDOUT.write("\n")
     minimiser.finish
     # Write manifest and version
     File.open("#{output_plugin_dir}/manifest", "w") { |f| f.write manifest }
     version = Digest::SHA256.hexdigest(manifest)
     File.open("#{output_plugin_dir}/version", "w") { |f| f.write "#{version}\n" }
-    # All done
-    puts "Version: #{version}\nPlugin packed."
   end
 
 end

@@ -96,7 +96,7 @@ module PluginTool
 
     # ---------------------------------------------------------------------------------------------------------
 
-    def command(cmd)
+    def command(cmd, errors)
       case cmd
       when 'license-key'
         application_id = @options.args.first
@@ -106,7 +106,7 @@ module PluginTool
         generate_license_key(application_id)
 
       when 'pack'
-        PluginTool.pack_plugin(@name, @options.output)
+        PluginTool.pack_plugin(@name, @options.output, errors)
 
       when 'reset-db'
         puts "Resetting database on server for #{@name}..."
