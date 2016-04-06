@@ -46,7 +46,7 @@ __E
 P.respond("GET", "/do/#{plugin_url_fragment}/example", [
 ], function(E) {
     E.render({
-        pageTitle: "Example page"
+        // view goes here: http://docs.haplo.org/dev/plugin/request-handling
     });
 });
 
@@ -55,6 +55,8 @@ __E
     File.open("#{plugin_name}/template/example.hsvt",'w') do |file|
       file.write(<<__E)
 // HSVT documentation: http://docs.haplo.org/dev/plugin/templates
+
+pageTitle("Example page")
 
 <p class="example"> "This is an example template." </p>
 __E
