@@ -23,7 +23,7 @@ LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true}
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_console, :show_system_audit, :args, :force, :server_substring).new
+options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :server_substring).new
 
 # Parse arguments
 show_help = false
@@ -33,6 +33,7 @@ opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
   ['--workspace', '-w', GetoptLong::REQUIRED_ARGUMENT],
   ['--plugin', '-p', GetoptLong::OPTIONAL_ARGUMENT],
+  ['--no-dependency', GetoptLong::NO_ARGUMENT],
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
   ['--output', GetoptLong::REQUIRED_ARGUMENT],
@@ -49,6 +50,8 @@ opts.each do |opt, argument|
     workspace_file = argument
   when '--plugin'
     requested_plugins = argument.split(',').map {|n| n.gsub(/[\/\\]+\z/,'')} # remove trailing dir separators
+  when '--no-dependency'
+    options.no_dependency = true
   when '--server'
     options.server_substring = argument
   when '--output'
@@ -87,6 +90,11 @@ if workspace_file
         end
         PLUGIN_SEARCH_PATH.push(path)
       end
+    end
+  end
+  if workspace_json.has_key?("plugins")
+    if requested_plugins.empty?
+      requested_plugins = workspace_json["plugins"]
     end
   end
 end
@@ -134,12 +142,38 @@ if requested_plugins.empty?
   end_on_error "No plugin specified, use -p plugin_name to specify or use workspace"
 end
 
+def find_plugin_in_list(list, name)
+  list.find { |p| p.name == name }
+end
+
 # Make plugin objects, start them, sort by order the server will load them
 plugins = plugin_paths.map do |path|
   PluginTool::Plugin.new(path, options)
 end
 unless requested_plugins == ["ALL"]
   selected_plugins = plugins.select { |plugin| requested_plugins.include?(plugin.name) }
+  # Attempt to resolve dependencies
+  unless options.no_dependency
+    while true
+      selected_plugins_expanded = selected_plugins.dup
+      selected_plugins.each do |plugin|
+        plugin.depend.each do |name|
+          unless name =~ /\Astd_/
+            unless find_plugin_in_list(selected_plugins_expanded, name)
+              add_plugin = find_plugin_in_list(plugins, name)
+              if add_plugin
+                selected_plugins_expanded << add_plugin
+              else
+                puts "WARNING: Can't find dependency #{name}"
+              end
+            end
+          end
+        end
+      end
+      break if selected_plugins_expanded.length == selected_plugins.length
+      selected_plugins = selected_plugins_expanded
+    end
+  end
   plugins = selected_plugins
 end
 if plugins.length == 0

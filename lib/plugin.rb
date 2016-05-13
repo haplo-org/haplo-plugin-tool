@@ -19,9 +19,13 @@ module PluginTool
       end
       pj = File.open("#{@plugin_dir}/plugin.json") { |f| JSON.parse(f.read) }
       @name = pj["pluginName"]
+      end_on_error "#{@plugin_dir}/plugin.json: invalid pluginName" unless @name.kind_of?(String)
+      @depend = pj["depend"] || []
+      end_on_error "#{@plugin_dir}/plugin.json: invalid pluginName" unless @depend.kind_of?(Array)
     end
     attr_accessor :name
     attr_accessor :plugin_dir
+    attr_accessor :depend
     attr_accessor :loaded_plugin_id
 
     # ---------------------------------------------------------------------------------------------------------
