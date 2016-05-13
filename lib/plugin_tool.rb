@@ -20,17 +20,18 @@ PluginTool::LocalConfig.load
 
 # Commands not needing server
 LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true}
-
-# Plugin names
-plugin_names = []
+PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
 options = Struct.new(:output, :minimiser, :no_console, :show_system_audit, :args, :force, :server_substring).new
 
 # Parse arguments
 show_help = false
+workspace_file = nil
+requested_plugins = []
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--workspace', '-w', GetoptLong::REQUIRED_ARGUMENT],
   ['--plugin', '-p', GetoptLong::OPTIONAL_ARGUMENT],
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
@@ -44,8 +45,10 @@ opts.each do |opt, argument|
   case opt
   when '--help'
     show_help = true
+  when '--workspace'
+    workspace_file = argument
   when '--plugin'
-    plugin_names = argument.split(',').map {|n| n.gsub(/[\/\\]+\z/,'')} # remove trailing dir separators
+    requested_plugins = argument.split(',').map {|n| n.gsub(/[\/\\]+\z/,'')} # remove trailing dir separators
   when '--server'
     options.server_substring = argument
   when '--output'
@@ -64,6 +67,30 @@ end
 PLUGIN_TOOL_COMMAND = (ARGV.shift || 'develop')
 options.args = ARGV
 
+# Parse workspace file
+if workspace_file
+  workspace_json = JSON.parse(File.read(workspace_file))
+  if workspace_json.has_key?("base")
+    workspace_base_json = JSON.parse(File.read(File.dirname(workspace_file)+'/'+workspace_json["base"]))
+    workspace_json = workspace_base_json.merge(workspace_json)
+  end
+  if workspace_json.has_key?("search")
+    PLUGIN_SEARCH_PATH.clear
+    workspace_json["search"].each do |entry|
+      if entry.has_key?("path")
+        path = File.expand_path(File.dirname(workspace_file)+'/'+entry["path"])
+        unless Dir.exist?(path)
+          puts "Can't find directory: #{path}"
+          puts "  #{entry["name"]}" if entry.has_key?("name")
+          puts "  #{entry["obtain"]}" if entry.has_key?("obtain")
+          exit 1
+        end
+        PLUGIN_SEARCH_PATH.push(path)
+      end
+    end
+  end
+end
+
 automatic_plugin_exclusion = false
 
 # Help message?
@@ -72,28 +99,27 @@ if show_help || PLUGIN_TOOL_COMMAND == 'help'
   exit 0
 end
 
-# Plugin names handling
-def find_all_plugins()
-  all_plugins = []
-  Dir.glob("**/plugin.json").each do |p|
-    if p =~ /\A([a-zA-Z0-9_]+)\/plugin\.json\z/
-      all_plugins << $1
+# Find all plugins in the repository
+plugin_paths = []
+PLUGIN_SEARCH_PATH.each do |directory|
+  Dir.glob("#{directory}/*/plugin.json").each do |p|
+    if p =~ /\A(.+)\/plugin\.json\z/
+      plugin_paths << $1
     end
   end
-  all_plugins
 end
 
-if plugin_names.length == 1 && plugin_names[0] == 'ALL'
-  plugin_names = find_all_plugins()
+if plugin_paths.length == 1 && plugin_paths[0] == 'ALL'
+  plugin_paths = find_all_plugins()
   automatic_plugin_exclusion = true
 end
 
 # Some commands don't require a server or plugin to be specified
 case PLUGIN_TOOL_COMMAND
 when 'new'
-  end_on_error "Plugin name not specified, use --plugin option." if plugin_names.empty?
-  end_on_error "Only one plugin name should be specified for new command" if plugin_names.length > 1
-  PluginTool.make_new_plugin(plugin_names.first)
+  end_on_error "Plugin name not specified, use --plugin option." if requested_plugins.empty?
+  end_on_error "Only one plugin name should be specified for new command" if requested_plugins.length > 1
+  PluginTool.make_new_plugin(requested_plugins.first)
   exit 0
 when 'auth'
   PluginTool.cmd_auth options
@@ -103,24 +129,21 @@ when 'server'
   exit 0
 end
 
-# Find a plugin if none was specified
-if plugin_names.empty?
-  all_plugins = find_all_plugins()
-  end_on_error "No plugin found" if all_plugins.length == 0
-  if all_plugins.length > 1
-    puts "Too many plugins in the current directory for automatic selection."
-    puts "Use -p plugin_name to specify. Eg:"
-    all_plugins.each do |name|
-      puts "  #{$0} -p #{name}"
-    end
-    exit 1
-  end
-  plugin_names = all_plugins
+# Check that the user requested a plugin
+if requested_plugins.empty?
+  end_on_error "No plugin specified, use -p plugin_name to specify or use workspace"
 end
 
 # Make plugin objects, start them, sort by order the server will load them
-plugins = plugin_names.map do |name|
-  PluginTool::Plugin.new(name, options)
+plugins = plugin_paths.map do |path|
+  PluginTool::Plugin.new(path, options)
+end
+unless requested_plugins == ["ALL"]
+  selected_plugins = plugins.select { |plugin| requested_plugins.include?(plugin.name) }
+  plugins = selected_plugins
+end
+if plugins.length == 0
+  end_on_error "No plugins selected, check -p option (requested: #{requested_plugins.join(',')})"
 end
 plugins.each { |p| p.start }
 plugins.sort! do |a,b|

@@ -10,9 +10,15 @@ module PluginTool
   class Plugin
     DEFAULT_PLUGIN_LOAD_PRIORITY = 9999999
 
-    def initialize(name, options)
-      @name = name
+    def initialize(dir, options)
+      @plugin_dir = dir
       @options = options
+      # Check to see if the plugin is valid
+      unless File.file?("#{@plugin_dir}/plugin.json")
+        end_on_error "Plugin #{@plugin_dir} does not exist (no plugin.json file)"
+      end
+      pj = File.open("#{@plugin_dir}/plugin.json") { |f| JSON.parse(f.read) }
+      @name = pj["pluginName"]
     end
     attr_accessor :name
     attr_accessor :plugin_dir
@@ -25,13 +31,7 @@ module PluginTool
     # ---------------------------------------------------------------------------------------------------------
 
     def start
-      # Check to see if the plugin is valid
-      unless File.file?("#{@name}/plugin.json")
-        end_on_error "Plugin #{@name} does not exist (no plugin.json file)"
-      end
       # Setup for using the plugin
-      @plugin_dir = @name
-      end_on_error "logic error" unless @plugin_dir =~ /\A[a-zA-Z0-9_-]+\z/
       @loaded_plugin_id = nil
     end
 
