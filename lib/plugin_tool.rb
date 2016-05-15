@@ -214,10 +214,11 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
       application_info["installedPlugins"].each do |name|
         unless name =~ /\Astd_/
           unless root_plugin_dependent_plugin_names.include?(name)
-            uninstall = ALL_PLUGINS.find { |p| p.name == name }
-            if uninstall
-              uninstall.setup_for_server
-              uninstall.command("uninstall", [])
+            s_found_info = PluginTool.post_with_json_response("/api/development-plugin-loader/find-registration", {:name => name})
+            if s_found_info["found"]
+              puts "Uninstalling plugin #{name} from server..."
+              res = PluginTool.post_with_json_response("/api/development-plugin-loader/uninstall/#{s_found_info['plugin_id']}")
+              end_on_error "Couldn't uninstall plugin" unless res["result"] == 'success'
             end
           end
         end
