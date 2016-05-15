@@ -56,7 +56,6 @@ end
 require TEMPLATES_JAR
 
 require "#{PLUGIN_TOOL_ROOT_DIR}/lib/hmac.rb"
-require "#{PLUGIN_TOOL_ROOT_DIR}/lib/local_config.rb"
 require "#{PLUGIN_TOOL_ROOT_DIR}/lib/manifest.rb"
 require "#{PLUGIN_TOOL_ROOT_DIR}/lib/auth.rb"
 require "#{PLUGIN_TOOL_ROOT_DIR}/lib/server.rb"

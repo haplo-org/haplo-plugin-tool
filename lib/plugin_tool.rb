@@ -16,10 +16,9 @@ end
 
 PluginTool.try_load_custom
 
-PluginTool::LocalConfig.load
-
-# Commands not needing server
-LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true}
+WORKSPACE_FILE = 'workspace.json'
+LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true}
+NO_DEPENDENCY_COMMANDS = LOCAL_ONLY_COMMANDS.dup
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
@@ -27,11 +26,9 @@ options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_sys
 
 # Parse arguments
 show_help = false
-workspace_file = nil
 requested_plugins = []
 opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
-  ['--workspace', '-w', GetoptLong::REQUIRED_ARGUMENT],
   ['--plugin', '-p', GetoptLong::OPTIONAL_ARGUMENT],
   ['--no-dependency', GetoptLong::NO_ARGUMENT],
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
@@ -46,8 +43,6 @@ opts.each do |opt, argument|
   case opt
   when '--help'
     show_help = true
-  when '--workspace'
-    workspace_file = argument
   when '--plugin'
     requested_plugins = argument.split(',').map {|n| n.gsub(/[\/\\]+\z/,'')} # remove trailing dir separators
   when '--no-dependency'
@@ -71,17 +66,14 @@ PLUGIN_TOOL_COMMAND = (ARGV.shift || 'develop')
 options.args = ARGV
 
 # Parse workspace file
-if workspace_file
-  workspace_json = JSON.parse(File.read(workspace_file))
-  if workspace_json.has_key?("base")
-    workspace_base_json = JSON.parse(File.read(File.dirname(workspace_file)+'/'+workspace_json["base"]))
-    workspace_json = workspace_base_json.merge(workspace_json)
-  end
+auto_uninstall_unexpected_plugins = false
+if File.exist?(WORKSPACE_FILE)
+  workspace_json = JSON.parse(File.read(WORKSPACE_FILE))
   if workspace_json.has_key?("search")
     PLUGIN_SEARCH_PATH.clear
     workspace_json["search"].each do |entry|
       if entry.has_key?("path")
-        path = File.expand_path(File.dirname(workspace_file)+'/'+entry["path"])
+        path = File.expand_path('./'+entry["path"])
         unless Dir.exist?(path)
           puts "Can't find directory: #{path}"
           puts "  #{entry["name"]}" if entry.has_key?("name")
@@ -92,14 +84,10 @@ if workspace_file
       end
     end
   end
-  if workspace_json.has_key?("plugins")
-    if requested_plugins.empty?
-      requested_plugins = workspace_json["plugins"]
-    end
+  if workspace_json.has_key?("autoUninstallPlugins")
+    auto_uninstall_unexpected_plugins=  !!(workspace_json["autoUninstallPlugins"])
   end
 end
-
-automatic_plugin_exclusion = false
 
 # Help message?
 if show_help || PLUGIN_TOOL_COMMAND == 'help'
@@ -119,7 +107,6 @@ end
 
 if plugin_paths.length == 1 && plugin_paths[0] == 'ALL'
   plugin_paths = find_all_plugins()
-  automatic_plugin_exclusion = true
 end
 
 # Some commands don't require a server or plugin to be specified
@@ -137,9 +124,24 @@ when 'server'
   exit 0
 end
 
-# Check that the user requested a plugin
+# Set up server communications and get application info
+application_info = nil
+unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
+  PluginTool.setup_auth(options)
+  PluginTool.check_for_certificate_file
+  application_info = PluginTool.get_application_info
+  puts "Remote application name: #{(application_info["name"]||'').to_s.strip.gsub(/\s+/,' ')}"
+end
+
+# If the user didn't requested a plugin, try to use the application info to select the root plugin
+if requested_plugins.empty? && application_info
+  application_root_plugin = application_info["config"]["applicationRootPlugin"]
+  if application_root_plugin
+    requested_plugins = [application_root_plugin.to_s]
+  end
+end
 if requested_plugins.empty?
-  end_on_error "No plugin specified, use -p plugin_name to specify or use workspace"
+  end_on_error "No plugin specified and remote application isn't configured with an application root plugin, use -p plugin_name to specify"
 end
 
 def find_plugin_in_list(list, name)
@@ -147,20 +149,20 @@ def find_plugin_in_list(list, name)
 end
 
 # Make plugin objects, start them, sort by order the server will load them
-plugins = plugin_paths.map do |path|
+ALL_PLUGINS = plugin_paths.map do |path|
   PluginTool::Plugin.new(path, options)
 end
-unless requested_plugins == ["ALL"]
-  selected_plugins = plugins.select { |plugin| requested_plugins.include?(plugin.name) }
+def plugins_with_dependencies(plugin_names, no_dependency=false)
+  selected_plugins = ALL_PLUGINS.select { |plugin| plugin_names.include?(plugin.name) }
   # Attempt to resolve dependencies
-  unless options.no_dependency
+  unless no_dependency
     while true
       selected_plugins_expanded = selected_plugins.dup
       selected_plugins.each do |plugin|
         plugin.depend.each do |name|
           unless name =~ /\Astd_/
             unless find_plugin_in_list(selected_plugins_expanded, name)
-              add_plugin = find_plugin_in_list(plugins, name)
+              add_plugin = find_plugin_in_list(ALL_PLUGINS, name)
               if add_plugin
                 selected_plugins_expanded << add_plugin
               else
@@ -174,11 +176,57 @@ unless requested_plugins == ["ALL"]
       selected_plugins = selected_plugins_expanded
     end
   end
-  plugins = selected_plugins
+  selected_plugins
+end
+
+if requested_plugins == ["ALL"]
+  plugins = ALL_PLUGINS.dup
+else
+  plugins = plugins_with_dependencies(requested_plugins, options.no_dependency || NO_DEPENDENCY_COMMANDS[PLUGIN_TOOL_COMMAND])
 end
 if plugins.length == 0
   end_on_error "No plugins selected, check -p option (requested: #{requested_plugins.join(',')})"
 end
+
+# Check requested plugins should be installed on this server
+unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
+  application_root_plugin = application_info["config"]["applicationRootPlugin"]
+  if application_root_plugin
+    root_plugin_dependent_plugins = plugins_with_dependencies([application_root_plugin.to_s])
+    root_plugin_dependent_plugin_names = root_plugin_dependent_plugins.map { |p| p.name }
+    # Check for plugins which aren't dependents of this plugin, as user might be uploading plugins
+    # in error and break their development application.
+    bad_plugin_requests = false
+    plugins.each do |plugin|
+      unless root_plugin_dependent_plugin_names.include?(plugin.name)
+        puts "Not a dependent of the application root plugin: #{plugin.name}"
+        bad_plugin_requests = true
+      end
+    end
+    # Error if any of the requested plugins aren't in this list
+    if bad_plugin_requests
+      end_on_error("Stopping because some requested plugins are not dependents of the application root plugin: #{application_root_plugin}")
+    end
+    # So that you can switch between repo branchs without worrying about having to
+    # uninstall the plugins in that branch, there's an option to remove anything
+    # that's not expected.
+    if auto_uninstall_unexpected_plugins
+      application_info["installedPlugins"].each do |name|
+        unless name =~ /\Astd_/
+          unless root_plugin_dependent_plugin_names.include?(name)
+            uninstall = ALL_PLUGINS.find { |p| p.name == name }
+            if uninstall
+              uninstall.setup_for_server
+              uninstall.command("uninstall", [])
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+# Sort plugins by load order, and prepare local plugin objects
 plugins.each { |p| p.start }
 plugins.sort! do |a,b|
   pri_a = a.plugin_load_priority
@@ -200,25 +248,9 @@ when 'check'
   exit 0
 end
 
-# Set up server communications
+# Set up local plugin objects against server
 unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
-  PluginTool.setup_auth(options)
-  PluginTool.check_for_certificate_file
-
   PluginTool.custom_behaviour.server_ready(plugins, PLUGIN_TOOL_COMMAND, options)
-
-  if automatic_plugin_exclusion
-    exclusions = PluginTool::LocalConfig.get_list("exclude")
-    plugins = plugins.select do |plugin|
-      if exclusions.include?(plugin.name)
-        puts "NOTICE: Excluded plugin #{plugin.name}"
-        false
-      else
-        true
-      end
-    end
-  end
-
   plugins.each { |p| p.setup_for_server }
 end
 
