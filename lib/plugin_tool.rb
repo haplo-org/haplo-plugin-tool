@@ -205,7 +205,11 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
     end
     # Error if any of the requested plugins aren't in this list
     if bad_plugin_requests
-      end_on_error("Stopping because some requested plugins are not dependents of the application root plugin: #{application_root_plugin}")
+      if options.force
+        puts "NOTICE: Ignoring plugin dependency check, uploading plugins anyway."
+      else
+        end_on_error("Stopping because some requested plugins are not dependents of the application root plugin: #{application_root_plugin}\nUse --force option to override.")
+      end
     end
     # So that you can switch between repo branchs without worrying about having to
     # uninstall the plugins in that branch, there's an option to remove anything
