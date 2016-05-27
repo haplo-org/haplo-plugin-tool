@@ -18,7 +18,7 @@ PluginTool.try_load_custom
 
 WORKSPACE_FILE = 'workspace.json'
 LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true}
-NO_DEPENDENCY_COMMANDS = LOCAL_ONLY_COMMANDS.dup
+NO_DEPENDENCY_COMMANDS = {"reset-db" => true}.merge(LOCAL_ONLY_COMMANDS)
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
