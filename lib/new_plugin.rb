@@ -15,8 +15,8 @@ module PluginTool
       end_on_error "File or directory #{plugin_name} already exists"
     end
     FileUtils.mkdir(plugin_name)
-    ['js', 'static', 'template', 'test'].each do |dir|
-      FileUtils.mkdir("#{plugin_name}/#{dir}")
+    ['js', 'static', 'template', 'test', 'file/form'].each do |dir|
+      FileUtils.mkdir_p("#{plugin_name}/#{dir}")
     end
     random = java.security.SecureRandom.new()
     rbytes = Java::byte[20].new

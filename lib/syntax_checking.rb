@@ -7,6 +7,8 @@
 
 module PluginTool
 
+  SYNTAX_CHECK_REGEXP = /\.(js|hsvt|json)\z/i
+
   @@syntax_check_queue = []
   @@syntax_check_queue_lock = Mutex.new
   @@syntax_check_queue_semaphore = Mutex.new
@@ -46,6 +48,7 @@ module PluginTool
     api_version = (plugin_json["apiVersion"] || '0').to_i
     # Determine kind of file
     return syntax_check_haplo_template(plugin, file) if file =~ /\.hsvt\z/i
+    return syntax_check_json_file(plugin, file) if file =~ /\.json\z/i
     kind = (file =~ /\A(\w+)\//) ? $1 : file
     # Is this file referenced?
     report = nil
@@ -102,6 +105,15 @@ module PluginTool
     end
   end
   PARSER_CONFIG = TemplateParserConfiguration.new
+
+  def self.syntax_check_json_file(plugin, file)
+    begin
+      JSON.parse(File.read("#{plugin.plugin_dir}/#{file}"))
+      nil
+    rescue => e
+      "  #{e.message}"
+    end
+  end
 
   def self.do_syntax_checking
     init_syntax_checking

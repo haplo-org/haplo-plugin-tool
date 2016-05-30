@@ -186,7 +186,7 @@ module PluginTool
             # Otherwise mark as a failed upload to stop an apply operation which will fail
             upload_failed = true
           end
-          PluginTool.syntax_check(self, filename) if filename =~ /\.(js|hsvt)\z/i
+          PluginTool.syntax_check(self, filename) if filename =~ SYNTAX_CHECK_REGEXP
         end
       end
       if upload_failed

@@ -37,7 +37,7 @@ module PluginTool
       next unless File.file?(pathname)
       next if plugin.exclude_files_from_syntax_check.include?(pathname)
       plugin_relative_name = pathname[plugin_dir.length+1, pathname.length]
-      if pathname =~ /\.(js|hsvt)\z/i
+      if pathname =~ SYNTAX_CHECK_REGEXP
         STDOUT.write("."); STDOUT.flush
         # Check JavaScript
         report = syntax_check_one_file(plugin, plugin_relative_name)
@@ -45,7 +45,7 @@ module PluginTool
           check_file_result(plugin, plugin_relative_name, :OK)
         else
           puts "\n**** #{plugin_relative_name} has errors:\n#{report}\n"
-          check_file_result(plugin, plugin_relative_name, (plugin_relative_name =~ /\A(js|template)\//) ? :FAIL : :WARN)
+          check_file_result(plugin, plugin_relative_name, (plugin_relative_name =~ /\A(js|template|file)\//) ? :FAIL : :WARN)
         end
       else
         # TODO: Checks for other file types, including the plugin.json
