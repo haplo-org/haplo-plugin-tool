@@ -106,7 +106,7 @@ module PluginTool
         generate_license_key(application_id)
 
       when 'pack'
-        PluginTool.pack_plugin(@name, @options.output, errors)
+        PluginTool.pack_plugin(self, @options.output, errors)
 
       when 'reset-db'
         puts "Resetting database on server for #{@name}..."

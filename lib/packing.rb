@@ -9,12 +9,14 @@ module PluginTool
 
   PACKING_EXCLUDE = ['developer.json', 'readme.txt']
 
-  def self.pack_plugin(plugin_name, output_directory, errors = [])
-    STDOUT.write("#{plugin_name}: ")
+  def self.pack_plugin(plugin, output_directory, errors = [])
+    STDOUT.write("#{plugin.name}: ")
+    raise "Bad plugin name when packing" unless plugin.name =~ /\A[a-zA-Z0-9_]+\z/
     # Get filenames and sort
-    files = Dir.glob("#{plugin_name}/**/*").map do |filename|
+    plugin_dir = plugin.plugin_dir
+    files = Dir.glob("#{plugin_dir}/**/*").map do |filename|
       if File.file? filename
-        filename[plugin_name.length+1, filename.length]
+        filename[plugin_dir.length+1, filename.length]
       else
         nil
       end
@@ -22,12 +24,12 @@ module PluginTool
       ok = plugin_filename_allowed?(filename) && !PACKING_EXCLUDE.include?(filename)
       unless ok || PACKING_EXCLUDE.include?(filename)
         STDOUT.write("!")
-        errors.push("IGNORED: #{plugin_name}/#{filename}")
+        errors.push("IGNORED: #{plugin_dir}/#{filename}")
       end
       ok
     end .sort
     # Clean output directory
-    output_plugin_dir = "#{output_directory}/#{plugin_name}"
+    output_plugin_dir = "#{output_directory}/#{plugin.name}"
     if File.exist? output_plugin_dir
       FileUtils.rm_r(output_plugin_dir)
     end
@@ -38,7 +40,7 @@ module PluginTool
     minimiser = PluginTool::Minimiser.new
     files.each do |filename|
       STDOUT.write("."); STDOUT.flush
-      data = File.open("#{plugin_name}/#{filename}") { |f| f.read }
+      data = File.open("#{plugin_dir}/#{filename}") { |f| f.read }
       # Minimise file?
       unless filename =~ /\Ajs\//
         data = minimiser.process(data, filename)
