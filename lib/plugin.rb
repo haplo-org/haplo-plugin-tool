@@ -21,13 +21,12 @@ module PluginTool
       @name = pj["pluginName"]
       end_on_error "#{@plugin_dir}/plugin.json: invalid pluginName" unless @name.kind_of?(String)
       @depend = pj["depend"] || []
-      @develop_depend = pj["develop_develop"] || []
+      @depend = @depend.concat(pj["developDepend"]) if pj["developDepend"]
       end_on_error "#{@plugin_dir}/plugin.json: invalid pluginName" unless @depend.kind_of?(Array)
     end
     attr_accessor :name
     attr_accessor :plugin_dir
     attr_accessor :depend
-    attr_accessor :develop_depend
     attr_accessor :loaded_plugin_id
 
     # ---------------------------------------------------------------------------------------------------------
