@@ -159,7 +159,8 @@ def plugins_with_dependencies(plugin_names, no_dependency=false)
     while true
       selected_plugins_expanded = selected_plugins.dup
       selected_plugins.each do |plugin|
-        plugin.depend.each do |name|
+        dependencies = plugin.depend.dup.concat(plugin.develop_depend)  # TODO: unless PLUGIN_TOOL_COMMAND == 'pack'?
+        dependencies.each do |name|
           unless name =~ /\Astd_/
             unless find_plugin_in_list(selected_plugins_expanded, name)
               add_plugin = find_plugin_in_list(ALL_PLUGINS, name)
