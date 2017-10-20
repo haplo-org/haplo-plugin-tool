@@ -11,14 +11,15 @@ def end_on_error(err)
 end
 
 File.open("#{File.dirname(__FILE__)}/version.txt") do |f|
-  puts "Haplo Plugin Tool (#{f.read.chomp})"
+  STDERR.puts "Haplo Plugin Tool (#{f.read.chomp})"
 end
 
 PluginTool.try_load_custom
 
 WORKSPACE_FILE = 'workspace.json'
-LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true}
+LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true, "list" => true}
 NO_DEPENDENCY_COMMANDS = {"reset-db" => true}.merge(LOCAL_ONLY_COMMANDS)
+NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
@@ -231,13 +232,22 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
   end
 end
 
-# Sort plugins by load order, and prepare local plugin objects
+# Sort plugins by load order
 plugins.each { |p| p.start }
 plugins.sort! do |a,b|
   pri_a = a.plugin_load_priority
   pri_b = b.plugin_load_priority
   (pri_a == pri_b) ? (a.name <=> b.name) : (pri_a <=> pri_b)
 end
+
+# List needs to output text now
+if PLUGIN_TOOL_COMMAND == 'list'
+  plugins.each do |p|
+    puts "#{p.name}\t#{p.plugin_dir}"
+  end
+  exit 0
+end
+
 puts "#{plugins.length} plugin#{plugins.length != 1 ? 's' : ''}"
 
 # Custom behaviour for this repo?
