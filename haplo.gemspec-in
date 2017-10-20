@@ -3,8 +3,8 @@ Gem::Specification.new do |s|
   files = Dir.glob("#{root_dir}/**/*.*").map { |x| x[root_dir.length + 1, x.length]}
 
   s.name        = 'haplo'
-  s.version     = '2.2.4'
-  s.date        = '2016-09-08'
+  s.version     = '2.2.5'
+  s.date        = '2017-10-20'
   s.summary     = "Haplo Plugin Tool"
   s.description = "Development tools for developing Haplo plugins, see http://haplo.org"
   s.licenses    = ["MPL-2.0"]
