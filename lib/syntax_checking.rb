@@ -31,6 +31,7 @@ module PluginTool
     # Set up interpreter and get a syntax checker function
     raise "Another JS Context is active" unless nil == Context.getCurrentContext()
     @@cx = Context.enter();
+    @@cx.setLanguageVersion(Context::VERSION_ES6)
     @@javascript_scope = @@cx.initStandardObjects();
     jshint = File.open("#{File.dirname(__FILE__)}/jshint.js") { |f| f.read }
     @@cx.evaluateString(@@javascript_scope, jshint, "<jshint.js>", 1, nil);
