@@ -134,6 +134,18 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
   puts "Remote application name: #{(application_info["name"]||'').to_s.strip.gsub(/\s+/,' ')}"
 end
 
+if PLUGIN_TOOL_COMMAND == 'devtools'
+  uninstall = (ARGV[0] == 'disable')
+  puts uninstall ? "Disabling development tools..." : "Enabling development tools..."
+  if 'OK' == PluginTool.post("/api/development-plugin-loader/devtools-#{uninstall ? 'uninstall' : 'install'}")
+    puts "Done"
+    exit 0
+  else
+    puts "Error updating server"
+    exit 1
+  end
+end
+
 # If the user didn't requested a plugin, try to use the application info to select the root plugin
 if requested_plugins.empty? && application_info
   application_root_plugin = application_info["config"]["applicationRootPlugin"]
