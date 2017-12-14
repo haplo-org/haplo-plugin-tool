@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :server_substring).new
+options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring).new
 
 # Parse arguments
 show_help = false
@@ -34,6 +34,7 @@ opts = GetoptLong.new(
   ['--no-dependency', GetoptLong::NO_ARGUMENT],
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
+  ['--turbo', GetoptLong::NO_ARGUMENT],
   ['--output', GetoptLong::REQUIRED_ARGUMENT],
   ['--no-console', '-n', GetoptLong::NO_ARGUMENT],
   ['--show-system-audit', GetoptLong::NO_ARGUMENT],
@@ -60,6 +61,8 @@ opts.each do |opt, argument|
     options.minimiser = PluginTool::Minimiser.new
   when '--force'
     options.force = true
+  when '--turbo'
+    options.turbo = true
   end
 end
 # Handle rest of command line -- first arg is the command, the rest are passed on

@@ -13,6 +13,7 @@ module PluginTool
     def initialize(dir, options)
       @plugin_dir = dir
       @options = options
+      @@apply_with_turbo = true if options.turbo
       # Check to see if the plugin is valid
       unless File.file?("#{@plugin_dir}/plugin.json")
         end_on_error "Plugin #{@plugin_dir} does not exist (no plugin.json file)"
@@ -31,6 +32,7 @@ module PluginTool
     # ---------------------------------------------------------------------------------------------------------
 
     @@pending_apply = []
+    @@apply_with_turbo = false
 
     # ---------------------------------------------------------------------------------------------------------
 
@@ -204,9 +206,11 @@ module PluginTool
     def self.do_apply
       return if @@pending_apply.empty?
       puts "Applying changes on server: #{@@pending_apply.map { |p| p.name } .join(', ')}"
-      r = PluginTool.post_with_json_response("/api/development-plugin-loader/apply", {
+      params = {
         :plugins => @@pending_apply.map { |p| p.loaded_plugin_id }.join(' ')
-      })
+      }
+      params[:turbo] = '1' if @@apply_with_turbo
+      r = PluginTool.post_with_json_response("/api/development-plugin-loader/apply", params)
       if r["result"] == 'success'
         @@pending_apply = []
       else
