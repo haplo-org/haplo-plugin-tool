@@ -32,6 +32,7 @@ module PluginTool
     # ---------------------------------------------------------------------------------------------------------
 
     @@pending_apply = []
+    @@pending_apply_kinds = {}
     @@apply_with_turbo = false
 
     # ---------------------------------------------------------------------------------------------------------
@@ -190,6 +191,15 @@ module PluginTool
           end
           PluginTool.syntax_check(self, filename) if filename =~ SYNTAX_CHECK_REGEXP
         end
+        # Mark what kinds of files are being applied
+        apply_kind = if filename =~ /\Astatic\//
+          :static
+        elsif filename =~ /\Atemplate\//
+          :template
+        else
+          :other
+        end
+        @@pending_apply_kinds[apply_kind] = true
       end
       if upload_failed
         puts "\n#{@name}: Not applying changes due to failure\n\n"
@@ -209,10 +219,18 @@ module PluginTool
       params = {
         :plugins => @@pending_apply.map { |p| p.loaded_plugin_id }.join(' ')
       }
-      params[:turbo] = '1' if @@apply_with_turbo
+      if @@apply_with_turbo
+        params[:turbo] = '1'
+        if @@pending_apply_kinds == {:static=>true}
+          params[:static_only] = '1'
+        elsif @@pending_apply_kinds == {:template=>true}
+          params[:template_change] = '1'
+        end
+      end
       r = PluginTool.post_with_json_response("/api/development-plugin-loader/apply", params)
       if r["result"] == 'success'
         @@pending_apply = []
+        @@pending_apply_kinds = {}
       else
         puts "\n\nDidn't apply changes on server\n\n"
         PluginTool.beep
