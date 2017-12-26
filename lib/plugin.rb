@@ -190,6 +190,13 @@ module PluginTool
             upload_failed = true
           end
           PluginTool.syntax_check(self, filename) if filename =~ SYNTAX_CHECK_REGEXP
+          if filename == 'requirements.schema'
+            # Check all JS files if schema requirements changes, as removing an 'as' statement
+            # could break JS files.
+            ((File.open("#{@plugin_dir}/plugin.json") { |f| JSON.parse(f.read) } ['load']) || []).each do |js|
+              PluginTool.syntax_check(self, js)
+            end
+          end
         end
         # Mark what kinds of files are being applied
         apply_kind = if filename =~ /\Astatic\//
