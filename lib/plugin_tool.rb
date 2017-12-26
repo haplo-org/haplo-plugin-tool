@@ -100,18 +100,19 @@ if show_help || PLUGIN_TOOL_COMMAND == 'help'
 end
 
 # Find all plugins in the repository
+# Normally only search in exact directory of workspace, but if checking plugins
+# search recursively to find as many as possible.
+glob_pattern = '*/plugin.json'
+glob_pattern = '**/*/plugin.json' if PLUGIN_TOOL_COMMAND == 'check'
 plugin_paths = []
 PLUGIN_SEARCH_PATH.each do |directory|
-  Dir.glob("#{directory}/*/plugin.json").each do |p|
+  Dir.glob("#{directory}/#{glob_pattern}").each do |p|
     if p =~ /\A(.+)\/plugin\.json\z/
-      plugin_paths << $1
+      plugin_paths << File.expand_path($1)
     end
   end
 end
-
-if plugin_paths.length == 1 && plugin_paths[0] == 'ALL'
-  plugin_paths = find_all_plugins()
-end
+plugin_paths.uniq!
 
 # Some commands don't require a server or plugin to be specified
 case PLUGIN_TOOL_COMMAND
