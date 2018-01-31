@@ -42,7 +42,7 @@ module PluginTool
       STDOUT.write("."); STDOUT.flush
       data = File.open("#{plugin_dir}/#{filename}") { |f| f.read }
       # Minimise file?
-      unless filename =~ /\Ajs\//
+      unless filename =~ /\A(js|test)\//
         data = minimiser.process(data, filename)
       end
       hash = Digest::SHA256.hexdigest(data)
