@@ -171,7 +171,7 @@ module PluginTool
           PluginTool.post_with_json_response("/api/development-plugin-loader/delete-file/#{@loaded_plugin_id}", params)
         else
           puts "  #{@name}: Uploading #{filename}"
-          data = File.open("#{@plugin_dir}/#{filename}") { |f| f.read }
+          data = File.open("#{@plugin_dir}/#{filename}", "rb") { |f| f.read }
           hash = action
           # Minimise file before uploading?
           if @options.minimiser != nil && filename =~ /\A(static|template)\//
