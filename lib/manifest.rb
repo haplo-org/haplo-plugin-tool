@@ -27,7 +27,7 @@ module PluginTool
         next
       end
       # Get hash of file
-      digest = File.open(pathname) { |f| Digest::SHA256.hexdigest(f.read) }
+      digest = File.open(pathname, "rb") { |f| Digest::SHA256.hexdigest(f.read) }
       # And add to manifest
       manifest[filename] = digest
     end

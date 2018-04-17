@@ -40,7 +40,7 @@ module PluginTool
     minimiser = PluginTool::Minimiser.new
     files.each do |filename|
       STDOUT.write("."); STDOUT.flush
-      data = File.open("#{plugin_dir}/#{filename}") { |f| f.read }
+      data = File.open("#{plugin_dir}/#{filename}", "rb") { |f| f.read }
       # Minimise file?
       unless filename =~ /\A(js|test)\//
         data = minimiser.process(data, filename)
