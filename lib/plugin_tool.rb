@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring, :restrict_to_app_id).new
+options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring, :restrict_to_app_id).new
 
 # Parse arguments
 show_help = false
@@ -32,6 +32,8 @@ opts = GetoptLong.new(
   ['--help', '-h', GetoptLong::NO_ARGUMENT],
   ['--plugin', '-p', GetoptLong::OPTIONAL_ARGUMENT],
   ['--no-dependency', GetoptLong::NO_ARGUMENT],
+  ['--with-dependency', GetoptLong::NO_ARGUMENT],
+  ['--exclude-with-prefix', GetoptLong::REQUIRED_ARGUMENT],
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
   ['--turbo', GetoptLong::NO_ARGUMENT],
@@ -50,6 +52,10 @@ opts.each do |opt, argument|
     requested_plugins = argument.split(',').map {|n| n.gsub(/[\/\\]+\z/,'')} # remove trailing dir separators
   when '--no-dependency'
     options.no_dependency = true
+  when '--with-dependency'
+    options.with_dependency = true
+  when '--exclude-with-prefix'
+    options.exclude_with_prefix = argument
   when '--server'
     options.server_substring = argument
   when '--output'
@@ -202,7 +208,13 @@ end
 if requested_plugins == ["ALL"]
   plugins = ALL_PLUGINS.dup
 else
-  plugins = plugins_with_dependencies(requested_plugins, options.no_dependency || NO_DEPENDENCY_COMMANDS[PLUGIN_TOOL_COMMAND])
+  no_dependency = options.no_dependency || NO_DEPENDENCY_COMMANDS[PLUGIN_TOOL_COMMAND]
+  no_dependency = false if options.with_dependency
+  plugins = plugins_with_dependencies(requested_plugins, no_dependency)
+end
+if options.exclude_with_prefix
+  exclude_regexp = Regexp.new("\\A(#{options.exclude_with_prefix.split(',').join('|')})")
+  plugins = plugins.select { |plugin| plugin.name !~ exclude_regexp }
 end
 if plugins.length == 0
   end_on_error "No plugins selected, check -p option (requested: #{requested_plugins.join(',')})"
