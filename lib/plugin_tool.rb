@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring).new
+options = Struct.new(:output, :minimiser, :no_dependency, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring, :restrict_to_app_id).new
 
 # Parse arguments
 show_help = false
@@ -36,6 +36,7 @@ opts = GetoptLong.new(
   ['--force', GetoptLong::NO_ARGUMENT],
   ['--turbo', GetoptLong::NO_ARGUMENT],
   ['--output', GetoptLong::REQUIRED_ARGUMENT],
+  ['--pack-restrict-to-app-id', GetoptLong::REQUIRED_ARGUMENT],
   ['--no-console', '-n', GetoptLong::NO_ARGUMENT],
   ['--show-system-audit', GetoptLong::NO_ARGUMENT],
   ['--minimise', '--minimize', '-m', GetoptLong::NO_ARGUMENT]
@@ -53,6 +54,8 @@ opts.each do |opt, argument|
     options.server_substring = argument
   when '--output'
     options.output = argument
+  when '--pack-restrict-to-app-id'
+    options.restrict_to_app_id = argument.to_i
   when '--no-console'
     options.no_console = true
   when '--show-system-audit'

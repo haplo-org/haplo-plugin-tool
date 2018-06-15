@@ -9,7 +9,7 @@ module PluginTool
 
   PACKING_EXCLUDE = ['developer.json', 'readme.txt']
 
-  def self.pack_plugin(plugin, output_directory, errors = [])
+  def self.pack_plugin(plugin, output_directory, restrict_to_app_id, errors = [])
     STDOUT.write("#{plugin.name}: ")
     raise "Bad plugin name when packing" unless plugin.name =~ /\A[a-zA-Z0-9_]+\z/
     # Get filenames and sort
@@ -29,7 +29,7 @@ module PluginTool
       ok
     end .sort
     # Clean output directory
-    output_plugin_dir = "#{output_directory}/#{plugin.name}"
+    output_plugin_dir = "#{output_directory}/#{restrict_to_app_id ? "#{restrict_to_app_id}." : ''}#{plugin.name}"
     if File.exist? output_plugin_dir
       FileUtils.rm_r(output_plugin_dir)
     end
@@ -41,6 +41,12 @@ module PluginTool
     files.each do |filename|
       STDOUT.write("."); STDOUT.flush
       data = File.open("#{plugin_dir}/#{filename}", "rb") { |f| f.read }
+      # Rewrite plugin.json?
+      if filename == 'plugin.json' && restrict_to_app_id
+        plugin_json = JSON.parse(data)
+        plugin_json['restrictToApplicationId'] = restrict_to_app_id
+        data = JSON.pretty_generate(plugin_json)
+      end
       # Minimise file?
       unless filename =~ /\A(js|test)\//
         data = minimiser.process(data, filename)
