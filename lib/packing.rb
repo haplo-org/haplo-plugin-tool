@@ -40,7 +40,8 @@ module PluginTool
     minimiser = PluginTool::Minimiser.new
     files.each do |filename|
       STDOUT.write("."); STDOUT.flush
-      data = File.open("#{plugin_dir}/#{filename}", "rb") { |f| f.read }
+      mode = (filename =~ /\.(js|json|html|hsvt|css)\Z/i) ? "rb:UTF-8" : "rb"
+      data = File.open("#{plugin_dir}/#{filename}", mode) { |f| f.read }
       # Rewrite plugin.json?
       if filename == 'plugin.json' && restrict_to_app_id
         plugin_json = JSON.parse(data)
