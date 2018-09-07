@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring, :restrict_to_app_id).new
+options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :server_substring, :restrict_to_app_id, :browser).new
 
 # Parse arguments
 show_help = false
@@ -41,7 +41,8 @@ opts = GetoptLong.new(
   ['--pack-restrict-to-app-id', GetoptLong::REQUIRED_ARGUMENT],
   ['--no-console', '-n', GetoptLong::NO_ARGUMENT],
   ['--show-system-audit', GetoptLong::NO_ARGUMENT],
-  ['--minimise', '--minimize', '-m', GetoptLong::NO_ARGUMENT]
+  ['--minimise', '--minimize', '-m', GetoptLong::NO_ARGUMENT],
+  ['--browser', GetoptLong::REQUIRED_ARGUMENT]
 )
 option_output = nil
 opts.each do |opt, argument|
@@ -72,6 +73,8 @@ opts.each do |opt, argument|
     options.force = true
   when '--turbo'
     options.turbo = true
+  when '--browser'
+    options.browser = argument
   end
 end
 # Handle rest of command line -- first arg is the command, the rest are passed on

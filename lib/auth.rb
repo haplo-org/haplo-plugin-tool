@@ -85,7 +85,12 @@ module PluginTool
     if java.lang.System.getProperty("os.name") == 'Mac OS X'
       puts "Attempting to open the following URL in your browser."
       puts "If the browser does not open, please visit this URL in your browser."
-      system "open #{user_url}"
+        if options.browser
+          browser = options.browser
+          system "open -a \"#{browser}\" #{user_url}"
+        else
+          system "open #{user_url}"
+        end
     else
       puts "Please visit this URL in your browser, and authenticate if necessary."
     end
