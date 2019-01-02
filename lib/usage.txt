@@ -11,7 +11,8 @@ Options:
   --plugin, -p
     Specify one or more plugin names, separated by commas, or ALL to specify all plugins
     in the current directory. If not specified, and there's a single plugin in the current
-    directory, it will be selected automatically.
+    directory, it will be selected automatically. If running the develop command against a
+    server, any plugins this plugin depends on will be installed to the application as well.
 
   --server, -s [SUBSTRING]
     For this run of the plugin tool, use the server containing the given substring.
@@ -24,6 +25,36 @@ Options:
   --no-console, -n
     In development mode, don't connect to the server for notifications. This prevents the
     output of console.log() being displayed in your local terminal window.
+
+  --no-dependency
+    Explicitly exclude any plugins this plugin depends on from being used in this command.
+    Commands each have a sensible default for whether they include or exclude dependencies
+    - this command allows you to override that default.
+
+  --with-dependency
+    Explicitly include any plugins this plugin depends on. Commands each have a sensible
+    default for whether they include or exclude dependencies - this command allows you to
+    override that default.
+
+  --output [DIR]
+    For use with the `pack` command. Specify a directory to output the packed plugins to.
+
+  --turbo
+    Run the platform in turbo mode. Results in faster reloading of JS runtimes, for rapid
+    reload of development files after changes.
+
+  --show-system-audit
+    Show system audit trail entries in the developer console.
+
+  --exclude-with-prefix [PREFIX]
+    Exclude all plugins that start with PREFIX from the command.
+
+  --force
+    Override platform safety checks to force-apply the command.
+
+  --pack-restrict-to-app-id [APPID]
+    For use with the `pack` command. Restrict this version of the packed plugins to only
+    be used by the application with id APPID
 
 Commands:
 
@@ -61,6 +92,12 @@ Commands:
   license-key <application-id>
     Generate a license key to allow plugin installation by a client. The numeric
     application ID is displayed during plugin installation.
+
+  pack
+    Produce a packed version of the plugins suitable for deployment to a production zone.
+
+  list
+    Output to the terminal a list of all selected plugins and the plugins they depend on.
 
 
 Running haplo-plugin without any arguments will find the plugin in the current directory and
