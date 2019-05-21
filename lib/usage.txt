@@ -64,6 +64,10 @@ Commands:
   devtools [disable]
     Enable or disable devtools on the server for development with the standard plugins.
 
+  template-debugging [disable]
+    Enable or disable template debugging, including adding comments in generated HTML
+    to indicate which templates were used.
+
   auth [SERVER]
     Authorise with server. SERVER can optionally include a non-default port number.
 

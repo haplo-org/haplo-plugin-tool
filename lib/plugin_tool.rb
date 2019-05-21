@@ -159,6 +159,18 @@ if PLUGIN_TOOL_COMMAND == 'devtools'
   end
 end
 
+if PLUGIN_TOOL_COMMAND == 'template-debugging'
+  disable = (ARGV[0] == 'disable')
+  puts disable ? "Disabling template debugging..." : "Enabling template debugging..."
+  if 'OK' == PluginTool.post("/api/development-plugin-loader/template-debugging?enable=#{disable ? '0' : '1'}")
+    puts "Done"
+    exit 0
+  else
+    puts "Error updating server"
+    exit 1
+  end
+end
+
 # If the user didn't requested a plugin, try to use the application info to select the root plugin
 if requested_plugins.empty? && application_info
   application_root_plugin = application_info["config"]["applicationRootPlugin"]
