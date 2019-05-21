@@ -7,7 +7,7 @@
 
 module PluginTool
 
-  PLUGIN_ACCEPTABLE_FILENAME = /\A(js|static|template|test|file)\/([A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.[A-Za-z0-9]+\z/
+  PLUGIN_ACCEPTABLE_FILENAME = /\A(js|static|template|test|file)\/([A-Za-z0-9_\.-]+\/)*[A-Za-z0-9_\.-]+\.[A-Za-z0-9]+\z/
   PLUGIN_ACCEPTABLE_FILENAME_EXCEPTIONS = ['plugin.json', 'requirements.schema', 'global.js', 'certificates-temp-http-api.pem', 'developer.json', 'readme.txt']
   def self.plugin_filename_allowed?(filename)
     (filename =~ PLUGIN_ACCEPTABLE_FILENAME) || (PLUGIN_ACCEPTABLE_FILENAME_EXCEPTIONS.include?(filename))
