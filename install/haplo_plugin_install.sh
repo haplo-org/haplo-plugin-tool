@@ -9,9 +9,9 @@ mkdir -p $HAPLO_PLUGIN_INSTALL_DIR
 cd $HAPLO_PLUGIN_INSTALL_DIR
 
 # you must update the checksum if updating the version
-jruby_version="9.0.5.0"
+jruby_version="9.2.7.0"
 jruby_filename="jruby-bin-$jruby_version.tar.gz"
-jruby_checksum="9369cfd8b19841eae2a764988121fc7d43b313b3"
+jruby_checksum="dc35f9bb991f526f058bf6b9591c460f98cffe9e"
 
 # clear up any previous install clutter
 if [ -d jruby ]; then rm -r jruby; fi
