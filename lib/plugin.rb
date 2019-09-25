@@ -29,6 +29,11 @@ module PluginTool
     attr_accessor :depend
     attr_accessor :loaded_plugin_id
 
+    def default_locale_id
+      # TODO: Other default locales
+      'en'
+    end
+
     # ---------------------------------------------------------------------------------------------------------
 
     @@pending_apply = []

@@ -17,7 +17,7 @@ end
 PluginTool.try_load_custom
 
 WORKSPACE_FILE = 'workspace.json'
-LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true, "list" => true}
+LOCAL_ONLY_COMMANDS = {"license-key" => true, "pack" => true, "check" => true, "new" => true, "list" => true, "extract-text" => true}
 NO_DEPENDENCY_COMMANDS = {"reset-db" => true}.merge(LOCAL_ONLY_COMMANDS)
 NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
@@ -144,7 +144,7 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
   PluginTool.setup_auth(options)
   PluginTool.check_for_certificate_file
   application_info = PluginTool.get_application_info
-  puts "Remote application name: #{(application_info["name"]||'').to_s.strip.gsub(/\s+/,' ')}"
+  STDERR.puts "Remote application name: #{(application_info["name"]||'').to_s.strip.gsub(/\s+/,' ')}"
 end
 
 if PLUGIN_TOOL_COMMAND == 'devtools'
@@ -303,7 +303,7 @@ if PLUGIN_TOOL_COMMAND == 'list'
   exit 0
 end
 
-puts "#{plugins.length} plugin#{plugins.length != 1 ? 's' : ''}"
+STDERR.puts "#{plugins.length} plugin#{plugins.length != 1 ? 's' : ''}"
 
 # Custom behaviour for this repo?
 PluginTool.custom_behaviour.start(plugins, PLUGIN_TOOL_COMMAND, options, LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND])
@@ -315,6 +315,9 @@ when 'pack'
   require "#{File.dirname(__FILE__)}/packing.rb"
 when 'check'
   PluginTool.check_plugins(plugins)
+  exit 0
+when 'extract-text'
+  PluginTool.i18n_extract_text(plugins)
   exit 0
 end
 

@@ -97,6 +97,10 @@ Commands:
   check
     Perform checks on the plugin as a quick test before it's submitted for review.
 
+  extract-text
+    Extract translatable text from templates, and attempt to extract text from JavaScript
+    files, and output a JSON data structure suitable for translation.
+
   license-key <application-id>
     Generate a license key to allow plugin installation by a client. The numeric
     application ID is displayed during plugin installation.
