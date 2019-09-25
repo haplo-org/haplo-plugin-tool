@@ -68,6 +68,10 @@ Commands:
     Enable or disable template debugging, including adding comments in generated HTML
     to indicate which templates were used.
 
+  i18n-debugging [disable]
+    Enable or disable internationalisation debugging, including indicating which text
+    in the user interface is translated.
+
   auth [SERVER]
     Authorise with server. SERVER can optionally include a non-default port number.
 
