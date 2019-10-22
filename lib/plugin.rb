@@ -191,11 +191,16 @@ module PluginTool
           hash = action
           # Minimise file before uploading?
           if @options.minimiser != nil && filename =~ /\A(static|template)\//
-            size_before = data.length
-            data = @options.minimiser.process(data, filename)
-            size_after = data.length
-            hash = Digest::SHA256.hexdigest(data)
-            puts "        minimisation: #{size_before} -> #{size_after} (#{(size_after * 100) / size_before}%)"
+            # Is this file explicitly excluded from minimisation?
+            unless exclude_files_from_minimisation.include?(filename)
+              size_before = data.length
+              data = @options.minimiser.process(data, filename)
+              size_after = data.length
+              hash = Digest::SHA256.hexdigest(data)
+              puts "        minimisation: #{size_before} -> #{size_after} (#{(size_after * 100) / size_before}%)"
+            else
+              puts "        minimisation: skipped by developer.json, unmodified file uploaded"
+            end
           end
           r = PluginTool.post_with_json_response("/api/development-plugin-loader/put-file/#{@loaded_plugin_id}", params, {:file => [filename, data]})
           if r["result"] == 'success'
