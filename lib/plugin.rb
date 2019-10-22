@@ -102,6 +102,17 @@ module PluginTool
       end
     end
 
+    def exclude_files_from_minimisation
+      @exclude_files_from_minimisation ||= begin
+        # developer.json file might specify files which should skip minimisation when packing
+        if developer_json['excludeFromMinimisation'].kind_of?(Array)
+          developer_json['excludeFromMinimisation']
+        else
+          []
+        end
+      end
+    end
+
     # ---------------------------------------------------------------------------------------------------------
 
     def command(cmd, errors)

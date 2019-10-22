@@ -50,7 +50,10 @@ module PluginTool
       end
       # Minimise file?
       unless filename =~ /\A(js|test)\//
-        data = minimiser.process(data, filename)
+        # Is this file explicitly excluded from minimisation during packing?
+        unless plugin.exclude_files_from_minimisation.include?(filename)
+          data = minimiser.process(data, filename)
+        end
       end
       hash = Digest::SHA256.hexdigest(data)
       # Make sure output directory exists, write file
