@@ -22,7 +22,7 @@ module PluginTool
     puts
     if @@check_ok && !@@check_warn
       puts "PASSED"
-    elsif @@check_warn
+    elsif @@check_ok && @@check_warn
       puts "PASSED WITH WARNINGS"
     else
       puts "FAILED"
