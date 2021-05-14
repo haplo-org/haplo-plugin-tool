@@ -50,6 +50,7 @@ module PluginTool
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.cert_store = ssl_ca
+    http.read_timeout = 3600 # 1 hour, in case a test runs for a very long time
     http.start
     http
   end
