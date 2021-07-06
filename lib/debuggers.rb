@@ -7,6 +7,23 @@
 
 module PluginTool
 
+  def self.request_profile(options)
+    if 'OK' == PluginTool.post("/api/development-plugin-loader/debugger-profile-start", {:min => options.profile})
+      puts "JavaScript profiler started."
+    else
+      puts "Error starting JavaScript profiler."
+      exit 1
+    end
+    at_exit do
+      puts
+      puts "Disabling JavaScript profiler..."
+      PluginTool.post("/api/development-plugin-loader/debugger-profile-stop")
+      puts "JavaScript profiler disabled."
+    end
+  end
+
+  # -------------------------------------------------------------------------
+
   def self.request_coverage(options)
 
     format = options.coverage_format || 'raw'

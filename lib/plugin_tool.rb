@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :coverage_file, :coverage_format, :server_substring, :restrict_to_app_id).new
+options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :profile, :coverage_file, :coverage_format, :server_substring, :restrict_to_app_id).new
 
 # Parse arguments
 show_help = false
@@ -37,6 +37,7 @@ opts = GetoptLong.new(
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
   ['--turbo', GetoptLong::NO_ARGUMENT],
+  ['--profile', GetoptLong::REQUIRED_ARGUMENT],
   ['--coverage-file', GetoptLong::REQUIRED_ARGUMENT],
   ['--coverage-format', GetoptLong::REQUIRED_ARGUMENT],
   ['--output', GetoptLong::REQUIRED_ARGUMENT],
@@ -74,6 +75,8 @@ opts.each do |opt, argument|
     options.force = true
   when '--turbo'
     options.turbo = true
+  when '--profile'
+    options.profile = argument.to_f
   when '--coverage-file'
     options.coverage_file = argument
   when '--coverage-format'
@@ -332,6 +335,9 @@ unless LOCAL_ONLY_COMMANDS[PLUGIN_TOOL_COMMAND]
   PluginTool.custom_behaviour.server_ready(plugins, PLUGIN_TOOL_COMMAND, options)
   plugins.each { |p| p.setup_for_server }
 
+  if options.profile
+    PluginTool.request_profile(options)
+  end
   if options.coverage_file
     PluginTool.request_coverage(options)
   end
