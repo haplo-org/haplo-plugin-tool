@@ -71,9 +71,7 @@ module PluginTool
       puts "LOG:#{data}"
     when 'prof'
       # Profiler report
-      puts "--- #{Time.now} ---"
-      puts data
-      puts
+      PluginTool.profiler_handle_report(data)
     when 'audt'
       decoded = JSON.parse(data)
       kind = decoded.find { |name,value| name == 'auditEntryType' }.last
