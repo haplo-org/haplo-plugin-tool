@@ -69,6 +69,9 @@ module PluginTool
     when 'log '
       # Output from console.log()
       puts "LOG:#{data}"
+    when 'prof'
+      # Profiler report
+      PluginTool.profiler_handle_report(data)
     when 'audt'
       decoded = JSON.parse(data)
       kind = decoded.find { |name,value| name == 'auditEntryType' }.last
