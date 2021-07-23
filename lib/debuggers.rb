@@ -107,3 +107,89 @@ module PluginTool
 
 end
 
+# -------------------------------------------------------------------------
+
+module DebugAdapterProtocolTunnel
+
+  @@dap_plugins = nil
+  @@dap_debugger_option = nil
+  @@dap_server = nil
+  @@dap_connection = nil
+
+  def self.prepare(plugins, options)
+    @@dap_plugins = plugins
+    @@dap_debugger_option = options.debugger
+    raise "BAD DEBUGGER OPTION #{@@dap_debugger_option}" unless @@dap_debugger_option =~ /\A(\d+)\z/
+    @@dap_server = TCPServer.new(@@dap_debugger_option.to_i)
+    Thread.new do
+      connection = @@dap_server.accept
+      @@dap_server.close
+      @@dap_server = nil
+      if connection
+        @@dap_connection = DAPConnection.new(connection, @@dap_plugins)
+        @@dap_connection.run
+      end
+    end
+    at_exit do
+      @@dap_server.close if @@dap_server
+    end
+  end
+
+  class DAPConnection
+    def initialize(connection, plugins)
+      @connection = connection
+      @plugins = plugins
+      @running = false
+      @next_seq = 1
+    end
+    def run
+      @running = true
+      have_initialized = false
+      while @running
+        header = @connection.readline
+        blank = @connection.readline
+        if header =~ /\Acontent-length:\s+(\d+)\r\n\z/i && blank == "\r\n"
+          body = @connection.read($1.to_i)
+          message = JSON.parse(body)
+          unless have_initialized
+            if message['type'] == 'request' && message['command'] == 'initialize'
+              puts "DEBUGGER: Connection from #{message['arguments']['clientName']} (#{message['arguments']['clientID']})\nDEBUGGER: Starting remote debugger..."
+              plugin_locations = {}
+              @plugins.each { |p| plugin_locations[p.name] = p.plugin_dir }
+              start_response = PluginTool.post("/api/development-plugin-loader/debugger-dap-start", {
+                :plugin_locations => JSON.generate(plugin_locations)
+              })
+              unless start_response =~ /\ATOKEN: (.+)\z/
+                raise "Remote debugger failed to start"
+              end
+              @token = $1
+              puts "DEBUGGER: Remote debugger started."
+              have_initialized = true
+            else
+              raise "Expected initialize message after DAP connection"
+            end
+          end
+          # TODO: Send messages in another thread, so that they can be batched together
+          message_response = PluginTool.post_with_json_response("/api/development-plugin-loader/debugger-dap-messages", {
+            :token => @token,
+            :messages => JSON.generate([message])
+          })
+          if message_response['error']
+            puts "DEBUGGER: Server responded with error: #{message_response['error']}"
+          else
+            message_response['messages'].each do |response|
+              if response
+                response['seq'] = @next_seq
+                @next_seq += 1
+                msg_json = JSON.generate(response)
+                @connection.write("Content-Length: #{msg_json.bytesize}\r\n\r\n")
+                @connection.write(msg_json)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+end
