@@ -135,13 +135,28 @@ module DebugAdapterProtocolTunnel
     end
   end
 
+  def self.log_message_from_server(text)
+    if @@dap_connection
+      @@dap_connection._write({
+        'type' => 'event',
+        'event' => 'output',
+        'body' => {
+          'category' => 'console',
+          'output' => text+"\n"
+        }
+      })
+    end
+  end
+
   class DAPConnection
     def initialize(connection, plugins)
       @connection = connection
       @plugins = plugins
       @running = false
       @next_seq = 1
+      @write_mutex = Mutex.new
     end
+
     def run
       @running = true
       have_initialized = false
@@ -178,16 +193,21 @@ module DebugAdapterProtocolTunnel
             puts "DEBUGGER: Server responded with error: #{message_response['error']}"
           else
             message_response['messages'].each do |response|
-              if response
-                response['seq'] = @next_seq
-                @next_seq += 1
-                msg_json = JSON.generate(response)
-                @connection.write("Content-Length: #{msg_json.bytesize}\r\n\r\n")
-                @connection.write(msg_json)
-              end
+              _write(response) if response
             end
           end
         end
+      end
+    end
+
+    def _write(message)
+      @write_mutex.synchronize do
+        m = {'seq' => @next_seq}
+        @next_seq += 1
+        m.merge!(message)
+        msg_json = JSON.generate(m)
+        @connection.write("Content-Length: #{msg_json.bytesize}\r\n\r\n")
+        @connection.write(msg_json)
       end
     end
   end
