@@ -155,6 +155,7 @@ module DebugAdapterProtocolTunnel
       @running = false
       @next_seq = 1
       @write_mutex = Mutex.new
+      @_dump_messages = (ENV['HAPLO_DAP_DEBUG'] == '1')
     end
 
     def run
@@ -166,6 +167,7 @@ module DebugAdapterProtocolTunnel
         if header =~ /\Acontent-length:\s+(\d+)\r\n\z/i && blank == "\r\n"
           body = @connection.read($1.to_i)
           message = JSON.parse(body)
+          puts "DAP READ: #{JSON.pretty_generate(message)}\n" if @_dump_messages
           unless have_initialized
             if message['type'] == 'request' && message['command'] == 'initialize'
               puts "DEBUGGER: Connection from #{message['arguments']['clientName']} (#{message['arguments']['clientID']})\nDEBUGGER: Starting remote debugger..."
@@ -205,6 +207,7 @@ module DebugAdapterProtocolTunnel
         m = {'seq' => @next_seq}
         @next_seq += 1
         m.merge!(message)
+        puts "DAP WRITE: #{JSON.pretty_generate(m)}\n" if @_dump_messages
         msg_json = JSON.generate(m)
         @connection.write("Content-Length: #{msg_json.bytesize}\r\n\r\n")
         @connection.write(msg_json)
