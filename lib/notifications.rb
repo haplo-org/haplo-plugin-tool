@@ -70,6 +70,8 @@ module PluginTool
       # Output from console.log()
       puts "LOG:#{data}"
       DebugAdapterProtocolTunnel.log_message_from_server(data)
+    when 'DAP1'
+      DebugAdapterProtocolTunnel.dap_message_from_server(data)
     when 'prof'
       # Profiler report
       PluginTool.profiler_handle_report(data)

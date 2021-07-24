@@ -148,6 +148,12 @@ module DebugAdapterProtocolTunnel
     end
   end
 
+  def self.dap_message_from_server(json)
+    if @@dap_connection
+      @@dap_connection._write(JSON.parse(json))
+    end
+  end
+
   class DAPConnection
     def initialize(connection, plugins)
       @connection = connection
