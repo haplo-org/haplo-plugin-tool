@@ -120,7 +120,7 @@ module DebugAdapterProtocolTunnel
     @@dap_plugins = plugins
     @@dap_debugger_option = options.debugger
     raise "BAD DEBUGGER OPTION #{@@dap_debugger_option}" unless @@dap_debugger_option =~ /\A(\d+)\z/
-    @@dap_server = TCPServer.new(@@dap_debugger_option.to_i)
+    @@dap_server = TCPServer.new("127.0.0.1", @@dap_debugger_option.to_i)
     Thread.new do
       connection = @@dap_server.accept
       @@dap_server.close
