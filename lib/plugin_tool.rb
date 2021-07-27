@@ -23,7 +23,7 @@ NO_DEPENDENCY_COMMANDS.delete('list')
 PLUGIN_SEARCH_PATH = ['.']
 
 # Options for passing to plugin objects
-options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :profile, :profile_file, :profile_format, :coverage_file, :coverage_format, :server_substring, :restrict_to_app_id).new
+options = Struct.new(:output, :minimiser, :no_dependency, :with_dependency, :exclude_with_prefix, :no_console, :show_system_audit, :args, :force, :turbo, :debugger, :profile, :profile_file, :profile_format, :coverage_file, :coverage_format, :server_substring, :restrict_to_app_id).new
 
 # Parse arguments
 show_help = false
@@ -37,6 +37,7 @@ opts = GetoptLong.new(
   ['--server', '-s', GetoptLong::REQUIRED_ARGUMENT],
   ['--force', GetoptLong::NO_ARGUMENT],
   ['--turbo', GetoptLong::NO_ARGUMENT],
+  ['--debugger', GetoptLong::REQUIRED_ARGUMENT],
   ['--profile', GetoptLong::REQUIRED_ARGUMENT],
   ['--profile-file', GetoptLong::REQUIRED_ARGUMENT],
   ['--profile-format', GetoptLong::REQUIRED_ARGUMENT],
@@ -77,6 +78,8 @@ opts.each do |opt, argument|
     options.force = true
   when '--turbo'
     options.turbo = true
+  when '--debugger'
+    options.debugger = argument
   when '--profile'
     options.profile = argument.to_f
   when '--profile-file'
@@ -364,6 +367,11 @@ PluginTool.start_syntax_check
 
 # Notifications support (including console)
 PluginTool.start_notifications(options) unless options.no_console
+
+# If the debugger is requested, open the listening socket. Debugger initialised on connection.
+if options.debugger
+  DebugAdapterProtocolTunnel.prepare(plugins, options)
+end
 
 # Open watcher
 watcher = PluginTool.make_watcher(plugins.map { |p| p.plugin_dir })
