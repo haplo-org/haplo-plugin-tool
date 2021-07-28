@@ -11,6 +11,7 @@ module PluginTool
     @@server_hostname = hostname
     @@server_port = port
     @@server_key = key
+    @@request_mutex = Mutex.new
   end
 
   def self.get_server_hostname
@@ -76,7 +77,9 @@ module PluginTool
     http = get_http
     request = Net::HTTP::Get.new(path)
     setup_request(request)
-    http.request(request).body
+    @@request_mutex.synchronize do
+      http.request(request).body
+    end
   end
 
   def self.get_with_json_response(path)
@@ -117,7 +120,9 @@ EOF
       body << "--#{boundary}--\r"
       request.body = body
     end
-    http.request(request).body
+    @@request_mutex.synchronize do
+      http.request(request).body
+    end
   end
 
   def self.post_with_json_response(path, params = nil, files = nil)
