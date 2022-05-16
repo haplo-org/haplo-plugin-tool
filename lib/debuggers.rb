@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+# (c) Avalara, Inc 2021
 
 module PluginTool
 
@@ -85,12 +85,12 @@ module PluginTool
   def self.request_coverage(options)
 
     format = options.coverage_format || 'raw'
-    if format != 'raw'
+    if format != 'raw' && format != 'lcov'
       puts "Unknown coverage format: #{format}"
       exit 1
     end
 
-    if 'OK' == PluginTool.post("/api/development-plugin-loader/debugger-coverage-start")
+    if 'OK' == PluginTool.post("/api/development-plugin-loader/debugger-coverage-start", {:coverage_format => format})
       puts "Coverage capture started."
     else
       puts "Error starting coverage capture."
