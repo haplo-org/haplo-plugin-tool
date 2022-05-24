@@ -150,7 +150,8 @@ module PluginTool
         puts
         puts test_result["output"] || ''
         puts test_result["summary"] || "(unknown results)"
-
+        end_on_error "Plugin tests have reported assertion failures or errors" unless test_result["assert_fails"] == 0 && test_result["errors"] == 0 
+      
       when 'develop'
         # do nothing here
 
