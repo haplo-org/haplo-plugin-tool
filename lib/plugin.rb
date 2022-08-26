@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+# (c) Avalara, Inc 2021
 
 module PluginTool
 
@@ -150,6 +150,7 @@ module PluginTool
         puts
         puts test_result["output"] || ''
         puts test_result["summary"] || "(unknown results)"
+        end_on_error "Plugin tests have reported assertion failures or errors" unless test_result["assert_fails"] == 0 && test_result["errors"] == 0
 
       when 'develop'
         # do nothing here
