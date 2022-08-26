@@ -1,24 +1,21 @@
 #!/bin/sh
 
 # Haplo Plugin Tool             http://docs.haplo.org/dev/tool/plugin
-# (c) Haplo Services Ltd 2006 - 2016    http://www.haplo-services.com
+# (c) Haplo Services Ltd 2006 - 2022    http://www.haplo-services.com
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-RHINO_FILENAME=rhino1.7.7.zip
-RHINO_JAR_DIR=rhino1.7.7
-RHINO_URL=https://github.com/mozilla/rhino/releases/download/Rhino1_7_7_RELEASE/${RHINO_FILENAME}
-RHINO_DIGEST=01209a126a0b27d37f923a5408298e3072b9433c
+RHINO_FILENAME=rhino-1.7.7.2.jar
+RHINO_URL=https://github.com/mozilla/rhino/releases/download/Rhino1_7_7_2_Release/${RHINO_FILENAME}
+RHINO_DIGEST=a7c4a9ba8b6922374580d71060ef71eafa994256
 
 cd lib
 
 # ---------------------------------------------------------------------------
 
 set -e
-
-RHINO_JAR_IN_ZIP=${RHINO_JAR_DIR}/js.jar
 
 if ! which curl; then
     echo curl is not available, cannot fetch archives
@@ -52,9 +49,5 @@ get_file() {
 
 # ---------------------------------------------------------------------------
 
-mkdir -p downloads
 get_file Rhino $RHINO_URL $RHINO_FILENAME $RHINO_DIGEST
-unzip $RHINO_FILENAME $RHINO_JAR_IN_ZIP
-mv $RHINO_JAR_IN_ZIP js.jar
-rmdir $RHINO_JAR_DIR
-rm $RHINO_FILENAME
+mv $RHINO_FILENAME js.jar
